@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Bank Transfer",
+    "enabled_payment": "bank_transfer"
+  },
+  {
+    "name": "QRIS",
+    "enabled_payment": "other_qris"
+  },
+  {
+    "name": "GoPay",
+    "enabled_payment": "gopay"
+  },
+  {
+    "name": "ShopeePay",
+    "enabled_payment": "shopeepay"
+  },
+  {
+    "name": "Permata VA",
+    "enabled_payment": "permata_va"
+  },
+  {
+    "name": "BNI VA",
+    "enabled_payment": "bni_va"
+  },
+  {
+    "name": "BRI VA",
+    "enabled_payment": "bri_va"
+  },
+  {
+    "name": "BCA VA",
+    "enabled_payment": "bca_va"
+  }
+]
