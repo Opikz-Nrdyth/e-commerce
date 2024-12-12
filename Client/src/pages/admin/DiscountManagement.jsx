@@ -78,6 +78,7 @@ const DiscountManagement = () => {
       {
         name: "code",
         type: "text",
+        uppercase: true,
         defaultValue: "",
       },
       {
@@ -279,7 +280,7 @@ const DiscountManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredDiscount.length > 0 ? (
+            {filteredDiscount?.length > 0 ? (
               filteredDiscount?.map((item, index) => (
                 <tr className=" hover:bg-neutral" key={index}>
                   <td className="px-4 py-2">{item.documentId}</td>

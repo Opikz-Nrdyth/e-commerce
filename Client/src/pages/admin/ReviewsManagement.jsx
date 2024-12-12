@@ -105,7 +105,7 @@ const ReviewsManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredReview.length > 0 ? (
+            {filteredReview?.length > 0 ? (
               filteredReview.map((item, index) => (
                 <tr className=" hover:bg-neutral" key={index}>
                   <td className="px-4 py-2">{item.documentId}</td>
@@ -138,7 +138,7 @@ const ReviewsManagement = () => {
                     </Popover>
                   </td>
                   <td className="px-4 py-2">
-                    {item?.thumbnail && item?.thumbnail.length > 1 ? (
+                    {item?.thumbnail && item?.thumbnail?.length > 1 ? (
                       <Popover
                         placement="auto"
                         title="Foto-foto"

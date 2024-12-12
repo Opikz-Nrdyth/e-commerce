@@ -21,11 +21,15 @@ const Cart = ({ categories, userData }) => {
   }
 
   const FetchData = async () => {
-    const { data } = await UseGetData(
-      `api/orders?filters[order_status][$eq]=Cart&filters[user_id][id][$eq]=${userData.id}&populate[user_id][populate][profile]=*&populate[user_id][populate][address]=*&populate[order_items][populate][product_variant][populate][product_id][populate]=thumbnail`
-    );
+    if (userData) {
+      // filters[order_status][$eq]=Cart&filters[user_id][id][$eq]=${userData?.id}&populate[user_id][populate][profile]=*&populate[user_id][populate][address]=*&populate[order_items][populate][product_variant][populate][product_id][populate]=thumbnail
+      console.log(userData.id);
+      const { data } = await UseGetData(
+        `api/orders?filters[order_status][$eq]=Cart&populate[order_items][populate][product_variant][populate][product_id][populate]=thumbnail`
+      );
 
-    setCart(processOrderItems(data.data));
+      setCart(processOrderItems(data.data));
+    }
   };
 
   useEffect(() => {
@@ -85,7 +89,7 @@ const Cart = ({ categories, userData }) => {
 
     if (type === "add") {
       if (dataType === "order") {
-        const existingOrderIndex = updatedCart.findIndex(
+        const existingOrderIndex = updatedCart?.findIndex(
           (order) => order.data.id === item.id
         );
 
@@ -112,10 +116,10 @@ const Cart = ({ categories, userData }) => {
               discount: [],
             },
           };
-          updatedCart.push(newOrder);
+          updatedCart?.push(newOrder);
         }
       } else if (dataType === "order_item") {
-        const existingOrderIndex = updatedCart.findIndex(
+        const existingOrderIndex = updatedCart?.findIndex(
           (order) => order.data.id === item.orderId
         );
 
@@ -138,9 +142,9 @@ const Cart = ({ categories, userData }) => {
       }
     } else if (type === "delete") {
       if (dataType === "order") {
-        updatedCart = updatedCart.filter((order) => order.data.id !== item.id);
+        updatedCart = updatedCart?.filter((order) => order.data.id !== item.id);
       } else if (dataType === "order_item") {
-        const existingOrderIndex = updatedCart.findIndex(
+        const existingOrderIndex = updatedCart?.findIndex(
           (order) => order.data.id === item.id
         );
 
@@ -151,7 +155,7 @@ const Cart = ({ categories, userData }) => {
 
           // If no order_items remain, remove the order from cartSelected
           if (updatedOrderItems.length === 0) {
-            updatedCart.splice(existingOrderIndex, 1);
+            updatedCart?.splice(existingOrderIndex, 1);
           } else {
             updatedCart[existingOrderIndex].data.order_items =
               updatedOrderItems;
@@ -279,6 +283,35 @@ const Cart = ({ categories, userData }) => {
     }
   };
 
+  const UpdateQuantity = (idProduk, idOrderItem, idVariant, quantity) => {
+    const newQuantity = cart.map((item) =>
+      item.id == idProduk
+        ? {
+            ...item,
+            order_items: item.order_items.map((oi) =>
+              oi.id == idOrderItem
+                ? {
+                    ...oi,
+                    variasi_product: oi.variasi_product.map((vp) =>
+                      vp.id == idVariant
+                        ? {
+                            ...vp,
+                            quantity: quantity,
+                          }
+                        : vp
+                    ),
+                  }
+                : oi
+            ),
+          }
+        : item
+    );
+
+    setCart(newQuantity);
+  };
+
+  console.log(cartSelected);
+
   return (
     <nav className="relative">
       <CursorTrail />
@@ -291,97 +324,110 @@ const Cart = ({ categories, userData }) => {
             Keranjang Produk
           </h1>
 
-          {cart.map((item, index) => (
-            <div
-              className="border-b p-4 mb-6 bg-neutral rounded-lg"
-              key={index}
-            >
-              <div className="mb-4 flex justify-between">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`select-order-${item.id}`}
-                    className="form-checkbox h-5 w-5 mr-2"
-                    checked={isItemSelected(item.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        handleSelected(item, "add", "order");
-                      } else {
-                        handleSelected(item, "delete", "order");
-                      }
-                    }}
-                  />
-                  <label
-                    htmlFor={`select-order-${item.id}`}
-                    className="text-lg text-accent font-bold"
-                  >
-                    {item.name_product}
-                  </label>
-                </div>
-                <button
-                  className="bg-danger hover:bg-danger-subtle w-[30px] h-[30px] rounded-md text-white"
-                  onClick={() => {
-                    deleteItem(item.documentId, "order");
-                  }}
+          {cart
+            ? cart?.map((item, index) => (
+                <div
+                  className="border-b p-4 mb-6 bg-neutral rounded-lg"
+                  key={index}
                 >
-                  <i className="fa-solid fa-trash"></i>
-                </button>
-              </div>
-
-              {item.order_items.map((order_item, index) => (
-                <nav key={index}>
-                  {order_item.variasi_product.map((variant, tdx) => (
-                    <div
-                      className="mb-1 bg-neutral-subtle rounded-md flex justify-between"
-                      key={tdx}
-                    >
-                      <div className="border rounded-lg p-4 flex items-center w-full">
-                        <img
-                          src={`${import.meta.env.VITE_BASE_URL}${
-                            order_item?.thumbnail?.url
-                          }`}
-                          alt={variant.Color}
-                          className="w-20 h-20 object-cover rounded-lg shadow-md mr-4"
-                        />
-                        <div className="flex-grow">
-                          <h3 className="text-lg font-semibold text-accent">
-                            {variant.Color || ""}{" "}
-                            {variant.Size ? `- Ukuran ${variant.Size}` : ""}
-                            {variant.Variant ? `- ${variant.Variant}` : ""}
-                          </h3>
-                          <p className="text-gray-600">
-                            {formatRupiah(variant.price)}
-                          </p>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={variant.quantity}
-                            min="1"
-                            className="w-16 p-1 rounded-md text-center mt-2 outline-none"
-                            onInput={(e) =>
-                              (e.target.value = e.target.value.replace(
-                                /[^0-9]/g,
-                                ""
-                              ))
-                            }
-                          />
-                        </div>
-                        <button
-                          className="bg-danger hover:bg-danger-subtle w-[30px] h-[30px] rounded-md text-white"
-                          onClick={() => {
-                            deleteItem(variant.orderItemId, "order_item");
-                          }}
-                        >
-                          <i className="fa-solid fa-trash"></i>
-                        </button>
-                      </div>
+                  <div className="mb-4 flex justify-between">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`select-order-${item.id}`}
+                        className="form-checkbox h-5 w-5 mr-2"
+                        checked={isItemSelected(item.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            handleSelected(item, "add", "order");
+                          } else {
+                            handleSelected(item, "delete", "order");
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`select-order-${item.id}`}
+                        className="text-lg text-accent font-bold"
+                      >
+                        {item.name_product}
+                      </label>
                     </div>
+                    <button
+                      className="bg-danger hover:bg-danger-subtle w-[30px] h-[30px] rounded-md text-white"
+                      onClick={() => {
+                        deleteItem(item.documentId, "order");
+                      }}
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+
+                  {item.order_items.map((order_item, index) => (
+                    <nav key={index}>
+                      {order_item.variasi_product.map((variant, tdx) => (
+                        <div
+                          className="mb-1 bg-neutral-subtle rounded-md flex justify-between"
+                          key={tdx}
+                        >
+                          <div className="border rounded-lg p-4 flex items-center w-full">
+                            <img
+                              src={`${import.meta.env.VITE_BASE_URL}${
+                                order_item?.thumbnail?.url
+                              }`}
+                              alt={variant.Color}
+                              className="w-20 h-20 object-cover rounded-lg shadow-md mr-4"
+                            />
+                            <div className="flex-grow">
+                              <h3 className="text-lg font-semibold text-accent">
+                                {variant.Color || ""}{" "}
+                                {variant.Size ? `- Ukuran ${variant.Size}` : ""}
+                                {variant.Variant ? `- ${variant.Variant}` : ""}
+                              </h3>
+                              <p className="text-gray-600">
+                                {formatRupiah(variant.price)}
+                              </p>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={variant.quantity}
+                                min="1"
+                                className="w-16 p-1 rounded-md text-center mt-2 outline-none"
+                                onChange={(e) => {
+                                  const idProduk = item.id;
+                                  const variantId = variant.id;
+                                  const oiId = order_item.id;
+                                  UpdateQuantity(
+                                    idProduk,
+                                    oiId,
+                                    variantId,
+                                    e.target.value.replace(/[^0-9]/g, "")
+                                  );
+                                }}
+                                onInput={(e) =>
+                                  (e.target.value = e.target.value.replace(
+                                    /[^0-9]/g,
+                                    ""
+                                  ))
+                                }
+                              />
+                            </div>
+                            <button
+                              className="bg-danger hover:bg-danger-subtle w-[30px] h-[30px] rounded-md text-white"
+                              onClick={() => {
+                                deleteItem(variant.orderItemId, "order_item");
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </nav>
                   ))}
-                </nav>
-              ))}
-            </div>
-          ))}
+                </div>
+              ))
+            : null}
         </div>
 
         <div className="fixed bg-neutral border-secondary border w-[73%] p-3 bottom-2 right-10 rounded-md shadow-custom transition-all duration-300 ease-in-out">

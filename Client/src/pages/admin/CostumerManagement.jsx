@@ -184,7 +184,7 @@ const CostumersManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredCostumer.length > 0 ? (
+            {filteredCostumer?.length > 0 ? (
               filteredCostumer?.map((item, index) => (
                 <tr className=" hover:bg-neutral" key={index}>
                   <td className="px-4 py-2">{item?.username}</td>

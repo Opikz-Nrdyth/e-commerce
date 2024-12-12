@@ -5,6 +5,7 @@ import { UseGetData } from "../../services/service_api";
 
 const AdminLayout = ({ userData, setUserData }) => {
   const navigate = useNavigate();
+  const [settings, setSettings] = useState(null);
   if (!userData) {
     navigate("/auth/login");
   } else if (userData?.role?.name != "Admin") {
@@ -22,7 +23,10 @@ const AdminLayout = ({ userData, setUserData }) => {
     window.innerWidth < 950
   );
 
-  const settings = get_settings();
+  const fetchSettings = async () => {
+    const settings = await get_settings();
+    setSettings(settings);
+  };
 
   function formatRupiah(amount) {
     return new Intl.NumberFormat("id-ID", {
@@ -32,7 +36,9 @@ const AdminLayout = ({ userData, setUserData }) => {
   }
 
   const Pemasukan = async () => {
-    const { data } = await UseGetData("api/invoices?populate=*");
+    const { data } = await UseGetData(
+      "api/invoices?filters[orders][id][$gt]=0&populate=*"
+    );
 
     // Hitung total pemasukan
     const pemasukan = data.data.reduce((total, invoice) => {
@@ -40,13 +46,14 @@ const AdminLayout = ({ userData, setUserData }) => {
         (order) => order.payment_status === "Paid"
       );
 
-      return ordersPaid.length > 0 ? total + invoice.final_price : total;
+      return ordersPaid?.length > 0 ? total + invoice.final_price : total;
     }, 0);
     setTotalPemasukan(pemasukan);
   };
 
   useEffect(() => {
     Pemasukan();
+    fetchSettings();
   }, []);
 
   return (

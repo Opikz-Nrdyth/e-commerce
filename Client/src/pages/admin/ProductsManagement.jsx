@@ -296,12 +296,12 @@ const ProductsManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((item, index) => (
+            {filteredProducts?.length > 0 ? (
+              filteredProducts?.map((item, index) => (
                 <tr className=" hover:bg-neutral" key={index}>
                   <td className="px-4 py-2">#{item.product_id}</td>
                   <td className="px-4 py-2">
-                    {item?.thumbnail && item?.thumbnail.length > 1 ? (
+                    {item?.thumbnail && item?.thumbnail?.length > 1 ? (
                       <Popover
                         placement="auto"
                         title="Foto-foto"

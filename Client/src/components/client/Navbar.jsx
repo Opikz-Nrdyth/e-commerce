@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { get_settings } from "../../services/fetch_settings";
 
@@ -7,7 +7,7 @@ const Navbar = ({ setViewFilter, viewFilter, categories, userData }) => {
   const navigate = useNavigate();
   const path = useParams();
   const params = path["*"];
-  const settings = get_settings();
+  const [settings, setSettings] = useState(null);
   const desktop = window.screen.width > 900;
 
   const handleSearch = (value) => {
@@ -43,6 +43,14 @@ const Navbar = ({ setViewFilter, viewFilter, categories, userData }) => {
   const limitedCategories = desktop
     ? shuffledCategories.slice(0, 5)
     : categories;
+
+  const fetchSettings = async () => {
+    const response = await get_settings();
+    setSettings(response);
+  };
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
   return (
     <header className="fixed z-20 w-[100%] top-0" id="header">

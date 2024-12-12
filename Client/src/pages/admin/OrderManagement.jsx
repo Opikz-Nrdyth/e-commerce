@@ -17,19 +17,20 @@ const OrdersManagement = () => {
   const [invoiceId, setInvoiceId] = useState("");
   const { showToast, ToastComponent } = useToast();
   const [urlGet, setUrlGet] = useState(
-    "api/orders?populate[user_id][populate]=address&populate[order_items][populate]=product_variant.product_id&populate[discount]=*&populate[invoice][populate][user][populate][address]=*"
+    "api/orders?populate[order_items][populate][product_variant][populate]=*&populate[user_id][populate][address][populate]=*&populate[invoice][populate]=*&populate[discount][populate]=*"
   );
   const [sort, setSort] = useState("asc");
 
   const handleSort = (sortName) => {
     if (sort == "asc") {
       setUrlGet(
-        `items][populate]=product_variant.product_id&populate[discount]=*&populate[invoice][populate][user][populate][address]=*&sort=${sortName}:asc`
+        `api/orders?populate[order_items][populate][product_variant][populate]=*&populate[user_id][populate][address][populate]=*&populate[invoice][populate]=*&populate[discount][populate]=*&sort=${sortName}:asc`
       );
       setSort("desc");
     } else {
       setUrlGet(
-        `items][populate]=product_variant.product_id&populate[discount]=*&populate[invoice][populate][user][populate][address]=*&sort=${sortName}:desc`
+        `api/orders?populate[order_items][populate][product_variant][populate]=*&populate[user_id][populate][address][populate]=*&populate[invoice][populate]=*&populate[discount][populate]=*
+      ort=${sortName}:desc`
       );
       setSort("asc");
     }
@@ -262,7 +263,7 @@ const OrdersManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredOrder.length > 0 ? (
+            {filteredOrder?.length > 0 ? (
               filteredOrder
                 ?.filter((item) => item.order_status != "Cart")
                 .map((item, index) => (

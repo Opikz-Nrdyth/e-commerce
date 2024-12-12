@@ -180,7 +180,7 @@ const SlideshowManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredSlideShow.length > 0 ? (
+            {filteredSlideShow?.length > 0 ? (
               filteredSlideShow.map((item, index) => (
                 <tr className=" hover:bg-neutral" key={index}>
                   <td className="px-4 py-2">{item.documentId}</td>

@@ -7,5 +7,6 @@
 $SETTING_ALLOWED_HOSTS = array(
     'ventoro.my.id',
     '127.0.0.1',
-    'httpbin.org' # change to restrict list to only domains you wish to allow clients to call via this proxy
+    'localhost',
+    'apiserver.tokotes.my.id' # change to restrict list to only domains you wish to allow clients to call via this proxy
 );

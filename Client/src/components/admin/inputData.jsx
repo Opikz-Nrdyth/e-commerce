@@ -467,8 +467,18 @@ const InputData = ({
                       type="text"
                       id={input.name}
                       defaultValue={input.defaultValue}
+                      onInput={(e) => {
+                        e.target.value = input?.uppercase
+                          ? e.target.value.toUpperCase()
+                          : e.target.value;
+                      }}
                       onChange={(e) =>
-                        handleInputChange(input.name, e.target.value)
+                        handleInputChange(
+                          input.name,
+                          input?.uppercase
+                            ? e.target.value.toUpperCase()
+                            : e.target.value
+                        )
                       }
                     />
                   </div>

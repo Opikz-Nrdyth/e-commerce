@@ -6,17 +6,34 @@ import {
   UseUploadPhoto,
 } from "../../services/service_api";
 import { useToast } from "../../components/common/useToast";
-import { useFetchRajaOngkir } from "../../services/fetchData";
+import { useFetchAddress } from "../../services/fetchData";
 import { Accordion } from "flowbite-react";
-import { Link } from "react-router-dom";
+import { json, Link } from "react-router-dom";
+import { DeckriptData } from "../../utils/decriptShopSettings";
 
 const ShopSettings = () => {
   const { showToast, ToastComponent } = useToast();
   const [data, setData] = useState({});
-
+  const {
+    address,
+    addressSelected,
+    setProvinsi,
+    setKota,
+    getAddress,
+    getProvince,
+  } = useFetchAddress();
   const FetchData = async () => {
     const { data } = await UseGetData("api/shop-setting?populate=*");
-    setData(data?.data);
+    const newData = data.data;
+    const prosesData = {
+      ...newData,
+      binderbyte: DeckriptData(newData?.binderbyte),
+      midtrans_client: DeckriptData(newData?.midtrans_client),
+      midtrans_server: DeckriptData(newData?.midtrans_server),
+      google_client_id: DeckriptData(newData?.google_client_id),
+      google_secret_id: DeckriptData(newData?.google_secret_id),
+    };
+    setData(prosesData);
   };
 
   const handleFileChange = (e) => {
@@ -38,11 +55,16 @@ const ShopSettings = () => {
     FetchData();
   }, []);
 
+  useEffect(() => {
+    getAddress(data.shop_address);
+  }, [data]);
+
   const FormSubmit = async (e) => {
     e.preventDefault();
 
     let statusUpdate = true;
     let fotoId = [];
+    const address = `{"provId":${addressSelected.provinceId}, "provName":"${addressSelected.provinceName}", "kotaId":${addressSelected.kotaId}, "kotaName":"${addressSelected.kotaName}"}`;
     if (data?.new_thumbnail) {
       const newFormData = new FormData();
       newFormData?.append("files", data?.thumbnail);
@@ -72,7 +94,7 @@ const ShopSettings = () => {
         shop_name: data?.shop_name,
         shop_description: data?.shop_description,
         thumbnail: fotoId || [],
-        shop_address: null,
+        shop_address: address,
         binderbyte: data?.binderbyte,
         midtrans_client: data?.midtrans_client,
         midtrans_server: data?.midtrans_server,
@@ -84,8 +106,6 @@ const ShopSettings = () => {
     const postData = await UseUpdateData("api/shop-setting", "", payload);
 
     if (postData?.status != "success") {
-      console.log(postData);
-
       statusUpdate = false;
       showToast(
         `Gagal Memperbarui Data Perusahaan!! ${postdata?.message}`,
@@ -99,9 +119,6 @@ const ShopSettings = () => {
       FetchData();
     }
   };
-
-  const getAddress = async () => {};
-  useEffect(() => {}, [data]);
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-6">
@@ -160,19 +177,26 @@ const ShopSettings = () => {
           <select
             id="province"
             name="province"
-            onChange={""}
+            onClick={() => {
+              getProvince();
+            }}
+            onChange={(e) => {
+              setProvinsi(e.target.value);
+            }}
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           >
-            <option value="1">Pilih Provinsi</option>
-            {/* {provinces?.map((province) => (
+            <option value="1" className="hidden">
+              Pilih Provinsi
+            </option>
+            {address.province?.map((province) => (
               <option
-                key={province.province_id}
-                value={province.province_id}
-                selected={dataAlamat.province == province.province_id}
+                key={province.id}
+                value={`${province.id},${province.name}`}
+                selected={addressSelected.provinceId == province.id}
               >
-                {province.province}
+                {province.name}
               </option>
-            ))} */}
+            ))}
           </select>
         </div>
         <div className="mb-4">
@@ -186,19 +210,21 @@ const ShopSettings = () => {
             id="city"
             name="city"
             value={null}
-            onChange={""}
+            onChange={(e) => {
+              setKota(e.target.value);
+            }}
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           >
             <option value="1">Pilih Kabupaten/Kota</option>
-            {/* {cities?.map((city) => (
+            {address.kota?.map((kota) => (
               <option
-                key={city.city_id}
-                value={city.city_id}
-                selected={dataAlamat.province == city.city_id}
+                key={kota.id}
+                value={`${kota.id},${kota.name}`}
+                selected={addressSelected.kotaId == kota.id}
               >
-                {city.city_name}
+                {kota.name}
               </option>
-            ))} */}
+            ))}
           </select>
         </div>
         <div className="mb-4">

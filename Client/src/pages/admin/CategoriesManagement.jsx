@@ -61,7 +61,7 @@ const CategoriesManagement = () => {
       {
         name: "discount_categories",
         type: "number",
-        defaultValue: "",
+        defaultValue: "0",
       },
     ],
   });

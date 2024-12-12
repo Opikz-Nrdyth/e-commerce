@@ -1,50 +1,40 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { UseGetData } from "../../services/service_api";
-import { useFetchRajaOngkir } from "../../services/fetchData";
+import { useFetchOngkir } from "../../services/fetchData";
 import { get_settings } from "../../services/fetch_settings";
 
 const InvoicePaper = ({ invoiceId }) => {
   const [invoice, setInvoice] = useState({});
   const [settings, setSettings] = useState({});
-
+  const [alamatUser, setAlamatUser] = useState({
+    provinsi: "",
+    kabupaten: "",
+  });
   const FetchData = async () => {
     const { data } = await UseGetData(
-      `api/invoices/${invoiceId}?populate[user][populate][address]=*&populate[orders][populate][order_items][populate][product_variant][populate][product_id]=*`
+      `api/invoices/${invoiceId}?populate[user][populate][address][populate]=*&populate[orders][populate][order_items][populate][product_variant][populate][product_id][populate]=*`
     );
 
     setInvoice(calculateProductItems(data?.data));
   };
 
   const FetchAddress = async () => {
-    if (invoice?.user?.address?.province?.length <= 3) {
-      const data = await useFetchRajaOngkir(
-        `city?id=${invoice?.user?.address?.city}`
-      );
-      if (
-        data?.rajaongkir?.results?.province &&
-        data?.rajaongkir?.results?.province != ""
-      ) {
-        setInvoice((statePrev) => ({
-          ...statePrev,
-          user: {
-            ...statePrev?.user,
-            address: {
-              ...statePrev?.user?.address,
-              city: data?.rajaongkir?.results?.city_name,
-              province: data?.rajaongkir?.results?.province,
-            },
-          },
-        }));
-      }
-    }
+    const city = JSON.parse(invoice?.user?.address?.city);
+    const province = JSON.parse(invoice?.user?.address?.province);
+    setAlamatUser({
+      provinsi: province.name,
+      kabupaten: city.name,
+    });
   };
 
+  const fetchSettings = async () => {
+    const settings = await get_settings();
+    setSettings(settings);
+  };
   useEffect(() => {
     FetchData();
-
-    const settings = get_settings();
-    setSettings(settings);
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -53,14 +43,18 @@ const InvoicePaper = ({ invoiceId }) => {
     }
   }, [invoice]);
 
-  console.log(settings);
-
   const calculateProductItems = (data) => {
     let payment_status = "";
     const newProductItems = data?.orders?.flatMap((order) =>
       order.order_items.map((item) => {
         const variant = item.product_variant;
         const product = variant.product_id;
+        const categories =
+          variant.product_id.categories.reduce((maxDiscount, category) => {
+            const categoryDiscount = category?.discount_categories || 0;
+            return Math.max(maxDiscount, categoryDiscount);
+          }, 0) || 0;
+
         payment_status = order.payment_status;
         return {
           product: `${product.name} (${variant.Size}, ${
@@ -69,7 +63,9 @@ const InvoicePaper = ({ invoiceId }) => {
           price: parseFloat(variant.price), // Harga varian produk
           stock: parseInt(variant.stock, 10), // Stok varian produk
           quantity: parseInt(item.quantity),
-          total: item.quantity * parseFloat(variant.price), // Total biaya berdasarkan kuantitas
+          discount_categories: categories,
+          total:
+            item.quantity * parseFloat(variant.price) * (1 - categories / 100), // Total biaya berdasarkan kuantitas
           final_price: parseFloat(order.total_price), // Harga total pesanan
         };
       })
@@ -163,8 +159,8 @@ const InvoicePaper = ({ invoiceId }) => {
           <div>
             <p className="font-medium">Alamat:</p>
             <p>{`${invoice?.user?.address?.complete_address || ""}, ${
-              invoice?.user?.address?.city || ""
-            }, ${invoice?.user?.address?.province || ""}, ${
+              alamatUser.kabupaten || ""
+            }, ${alamatUser.provinsi || ""}, ${
               invoice?.user?.address?.postal_code || ""
             }`}</p>
           </div>
@@ -191,6 +187,7 @@ const InvoicePaper = ({ invoiceId }) => {
                 <th className="p-2 text-left">Produk</th>
                 <th className="p-2 text-right">Harga</th>
                 <th className="p-2 text-right">Jumlah</th>
+                <th className="p-2 text-right">Diskon</th>
                 <th className="p-2 text-right">Total</th>
               </tr>
             </thead>
@@ -201,7 +198,11 @@ const InvoicePaper = ({ invoiceId }) => {
                   <td className="p-2 text-right">
                     {formatRupiah(item?.price)}
                   </td>
+
                   <td className="p-2 text-right">{item?.quantity}</td>
+                  <td className="p-2 text-right">
+                    {item?.discount_categories}%
+                  </td>
                   <td className="p-2 text-right">
                     {formatRupiah(item?.total)}
                   </td>
@@ -228,7 +229,7 @@ const InvoicePaper = ({ invoiceId }) => {
           </div>
           {invoice?.discount > 0 ? (
             <div className="flex justify-between mb-2">
-              <span>Discount</span>
+              <span>Discount Voucher</span>
               <span>{invoice?.discount}%</span>
             </div>
           ) : null}

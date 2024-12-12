@@ -55,9 +55,10 @@ const DetailProduk = ({ userData }) => {
 
   // mengambil data produk berdasarkan id dari server
   const FetchData = async () => {
-    const { data } = await UseGetData(
-      `api/products/${productId}?populate[reviews][populate]=*&populate[thumbnail]=*&populate[product_variants]=*&populate[categories]=*`
-    );
+    // const { data } = await UseGetData(
+    //   `api/products/${productId}?populate[reviews][populate]=*&populate[thumbnail]=*&populate[product_variants]=*&populate[categories]=*`
+    // );
+    const { data } = await UseGetData(`api/products/${productId}?populate=*`);
     setProducts(data.data);
   };
 
@@ -131,8 +132,8 @@ const DetailProduk = ({ userData }) => {
   // Fungsi untuk mendapatkan diskon dari categori
   function getProductDiscount() {
     // Check categories
-    if (products.categories && products.categories.length > 0) {
-      const discountCategories = products.categories?.map(
+    if (products?.categories && products?.categories.length > 0) {
+      const discountCategories = products?.categories?.map(
         (category) => category.discount_categories
       );
 
@@ -172,7 +173,7 @@ const DetailProduk = ({ userData }) => {
     };
 
     // Filter product variants berdasarkan firstSelected
-    products.product_variants.forEach((item) => {
+    products?.product_variants.forEach((item) => {
       if (firstSelected.name == "Color" && item.Color === firstSelected.value) {
         if (item.Variant && !result.variant.includes(item.Variant)) {
           result.variant.push(item.Variant); // Tambah variant ke result jika belum ada
@@ -416,8 +417,8 @@ const DetailProduk = ({ userData }) => {
     setThubnail(products?.thumbnail?.[0]?.url);
     setDiscount(parseInt(getProductDiscount()));
 
-    if (products && products.product_variants) {
-      extractVariants(products.product_variants);
+    if (products && products?.product_variants) {
+      extractVariants(products?.product_variants);
     }
   }, [products]);
 
@@ -432,9 +433,9 @@ const DetailProduk = ({ userData }) => {
 
   // Mengatur harga berdasarkan variasi yang dipilih
   useEffect(() => {
-    if (products.product_variants && products.product_variants.length > 0) {
+    if (products?.product_variants && products?.product_variants.length > 0) {
       // Menyaring produk berdasarkan filter yang dipilih
-      const filteredVariants = products.product_variants.filter((item) => {
+      const filteredVariants = products?.product_variants.filter((item) => {
         const isSizeMatch = filterHargaVariant.size
           ? item.Size === filterHargaVariant.size
           : true;
@@ -452,7 +453,7 @@ const DetailProduk = ({ userData }) => {
         setCartSelected((prevState) => ({
           ...prevState,
           productVariant: filteredVariants[0].documentId,
-          product_id: products.documentId,
+          product_id: products?.documentId,
         }));
         setHargaVariant(filteredVariants[0].price);
         let dicount =
@@ -482,8 +483,6 @@ const DetailProduk = ({ userData }) => {
       total: parseInt(newHarga),
     }));
   }, [cartSelected.quantity, hargaVariant]);
-
-  console.log(cartSelected);
 
   return (
     <nav className="flex xs:flex-col md:flex-row lg:flex-row gap-2 bg-white lg:p-3 rounded-md items-start">
@@ -515,17 +514,17 @@ const DetailProduk = ({ userData }) => {
 
       <div className="xs:w-full xs:p-3 lg:p-0 lg:w-[47%] flex flex-col justify-between">
         <div>
-          <p className="text-2xl font-bold leading-tight">{products.name}</p>
+          <p className="text-2xl font-bold leading-tight">{products?.name}</p>
           <div className="flex xs:flex-col lg:flex-row lg:items-center justify-between mt-2">
             <p>
               <span className="text-xl font-bold text-primary-subtle">
                 {hargaVariant != 0
                   ? changeSingleHarga(hargaVariant)
-                  : changeharga(products.product_variants)}
+                  : changeharga(products?.product_variants)}
               </span>{" "}
-              {!changeharga(products.product_variants)?.includes("~") ? (
+              {!changeharga(products?.product_variants)?.includes("~") ? (
                 <span className="text-md opacity-50 line-through">
-                  {changeharga(products.product_variants, "real")}
+                  {changeharga(products?.product_variants, "real")}
                 </span>
               ) : hargaVariant != 0 ? (
                 <span className="text-md opacity-50 line-through">
@@ -883,12 +882,12 @@ const DetailProduk = ({ userData }) => {
             <div className="mt-4">
               <p className="text-md font-bold text-accent">Deskripsi Produk:</p>
               <p className="text-justify hyphens-auto">
-                {products.description}
+                {products?.description}
               </p>
             </div>
           ) : viewBeli == "ulasan" ? (
             <nav className="h-[250px] overflow-auto">
-              {products.reviews && products.reviews.length > 0 ? (
+              {products?.reviews && products?.reviews.length > 0 ? (
                 products?.reviews?.map((item, index) => (
                   <Ulasan key={index} item={item} />
                 ))

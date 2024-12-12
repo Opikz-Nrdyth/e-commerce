@@ -104,10 +104,10 @@ const ProductItem = ({ setViewCart, item, setItemInCart }) => {
           navigate(`/produk/${item.documentId}`);
         }}
       >
-        <div className="w-[full] h-[250px]">
+        <div className="w-full h-[250px] ">
           <img
             alt="Wooden side table"
-            className="w-full h-full aspect-square object-cover object-top"
+            className="w-[1050px] h-[250px] aspect-square object-cover object-top"
             src={`${import.meta.env.VITE_BASE_URL}${item?.thumbnail?.[0]?.url}`}
           />
         </div>

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useFetchRajaOngkir } from "../../services/fetchData";
+import { useFetchAddress, useFetchOngkir } from "../../services/fetchData";
 import { UseCreateData, UseUpdateData } from "../../services/service_api";
 import { useToast } from "../common/useToast";
 
 const Address = ({ userData }) => {
-  const [provinces, setProvinces] = useState([]);
-  const [cities, setCities] = useState([]);
   const { showToast, ToastComponent } = useToast();
 
   const [dataAlamat, setDataAlamat] = useState({
@@ -18,9 +16,16 @@ const Address = ({ userData }) => {
     city: "",
   });
 
-  useEffect(() => {
-    fetchProvinces();
-  }, []);
+  const {
+    address,
+    addressSelected,
+    setProvinsi,
+    setKota,
+    getAddress,
+    getProvince,
+    getKotaDatabase,
+    getProvinceDatabase,
+  } = useFetchAddress();
 
   useEffect(() => {
     setDataAlamat((prevState) => ({
@@ -28,59 +33,29 @@ const Address = ({ userData }) => {
       user: userData?.id,
       name: `${userData?.first_name || ""} ${userData?.last_name || ""}`,
       phone: userData?.phone_number || "",
-      city: userData?.address?.city || "",
-      province: userData?.address?.province || "",
       postalCode: userData?.address?.postal_code || "",
       addressDetail: userData?.address?.complete_address || "",
     }));
 
-    if (userData?.address?.province && userData?.address?.province != "") {
-      fetchCities(userData?.address?.province);
+    if (userData?.address) {
+      getProvinceDatabase(userData?.address?.province);
+      getKotaDatabase(userData?.address?.city);
     }
   }, [userData]);
 
-  const fetchProvinces = async () => {
-    const data = await useFetchRajaOngkir("province");
-    setProvinces(data.rajaongkir.results);
-  };
-
-  const fetchCities = async (provinceId) => {
-    const data = await useFetchRajaOngkir(`city?province=${provinceId}`);
-    setCities(data.rajaongkir.results);
-  };
-
-  const handleProvinceChange = (e) => {
-    const provinceId = e.target.value;
-    setDataAlamat((prevState) => ({
-      ...prevState,
-      province: provinceId,
-    }));
-    fetchCities(provinceId);
-    setCities([]);
-  };
-
-  const handleCityChange = (e) => {
-    const cityId = e.target.value;
-
-    cities.map((item) => {
-      item.city_id == cityId
-        ? setDataAlamat((prevState) => ({
-            ...prevState,
-            city: cityId,
-            postalCode: item.postal_code,
-          }))
-        : null;
-    });
-  };
+  // console.log(userData, addressSelected);
 
   const HandleSave = async () => {
+    const cityData = `{"id":${addressSelected.kotaId}, "name":"${addressSelected.kotaName}"}`;
+    const provinceData = `{"id":${addressSelected.provinceId}, "name":"${addressSelected.provinceName}"}`;
     const payload = {
       data: {
         complete_address: dataAlamat.addressDetail,
-        city: dataAlamat.city,
-        province: dataAlamat.province,
+        city: cityData,
+        province: provinceData,
         postal_code: dataAlamat.postalCode,
-        user: dataAlamat.user,
+        user: [dataAlamat.user],
+        user_id: `${dataAlamat.user}`,
       },
     };
     try {
@@ -89,9 +64,9 @@ const Address = ({ userData }) => {
         message: "Error dalam pengiriman alamat",
       };
 
-      if (userData.Address) {
+      if (userData.address) {
         response = await UseUpdateData(
-          "api/addresse",
+          "api/addresses",
           userData.address.documentId,
           payload
         );
@@ -116,6 +91,7 @@ const Address = ({ userData }) => {
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-lg">
         <h1 className="text-2xl font-bold mb-6">Tambah Alamat Baru</h1>
+        {/* Name */}
         <div className="mb-4">
           <label
             htmlFor="name"
@@ -139,7 +115,7 @@ const Address = ({ userData }) => {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           />
         </div>
-
+        {/* Telephone */}
         <div className="mb-4">
           <label
             htmlFor="phone"
@@ -163,7 +139,7 @@ const Address = ({ userData }) => {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           />
         </div>
-
+        {/* Provinsi */}
         <div className="mb-4">
           <label
             htmlFor="province"
@@ -175,23 +151,31 @@ const Address = ({ userData }) => {
             id="province"
             name="province"
             required
-            value={dataAlamat.province}
-            onChange={handleProvinceChange}
+            value={
+              addressSelected.provinceId
+                ? `${addressSelected.provinceId},${addressSelected.provinceName}`
+                : ""
+            }
+            onChange={(e) => {
+              setProvinsi(e.target.value);
+            }}
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           >
-            <option value="">Pilih Provinsi</option>
-            {provinces?.map((province) => (
+            <option value="" className="hidden">
+              Pilih Provinsi
+            </option>
+            {address?.province?.map((province) => (
               <option
-                key={province.province_id}
-                value={province.province_id}
-                selected={dataAlamat.province == province.province_id}
+                key={province.id}
+                value={`${province.id},${province.name}`}
+                selected={addressSelected.provinceId == province.id}
               >
-                {province.province}
+                {province.name}
               </option>
             ))}
           </select>
         </div>
-
+        {/* Kota */}
         <div className="mb-4">
           <label
             htmlFor="city"
@@ -203,23 +187,29 @@ const Address = ({ userData }) => {
             id="city"
             name="city"
             required
-            value={dataAlamat.city}
-            onChange={handleCityChange}
+            value={
+              addressSelected.kotaId
+                ? `${addressSelected.kotaId},${addressSelected.kotaName}`
+                : ""
+            }
+            onChange={(e) => {
+              setKota(e.target.value);
+            }}
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           >
             <option value="">Pilih Kabupaten/Kota</option>
-            {cities?.map((city) => (
+            {address.kota?.map((kota) => (
               <option
-                key={city.city_id}
-                value={city.city_id}
-                selected={dataAlamat.province == city.city_id}
+                key={kota.id}
+                value={`${kota.id},${kota.name}`}
+                selected={addressSelected.kotaId == kota.id}
               >
-                {city.city_name}
+                {kota.name}
               </option>
             ))}
           </select>
         </div>
-
+        {/* Address detail */}
         <div className="mb-4">
           <label
             htmlFor="addressDetail"
@@ -242,7 +232,7 @@ const Address = ({ userData }) => {
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           ></textarea>
         </div>
-
+        {/* Kode Pos */}
         <div className="mb-4">
           <label
             htmlFor="postalCode"
@@ -254,7 +244,12 @@ const Address = ({ userData }) => {
             type="text"
             id="postalCode"
             name="postalCode"
-            readOnly
+            onChange={(e) => {
+              setDataAlamat((prevState) => ({
+                ...prevState,
+                postalCode: e.target.value,
+              }));
+            }}
             value={dataAlamat.postalCode}
             className="mt-1 block w-full border border-gray-300 rounded-md p-2"
           />

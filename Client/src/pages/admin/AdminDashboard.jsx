@@ -65,7 +65,7 @@ const AdminDashboard = () => {
       "api/users?populate=*&filters[role][type][$eq]=authenticated"
     );
 
-    setDataUsersAuthenticated(userdata?.data);
+    setDataUsersAuthenticated(userData?.data);
   };
 
   // Fungsi untuk mengatur server berjalan
@@ -292,7 +292,7 @@ const AdminDashboard = () => {
               Pelanggan Aktif
             </p>
             <p className="text-center text-6xl font-bold">
-              {dataUsersAuthenticated.length}
+              {dataUsersAuthenticated?.length || 0}
             </p>
             <p className="text-center ">Pelanggan</p>
           </div>
