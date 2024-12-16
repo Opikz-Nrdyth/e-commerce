@@ -1,9 +1,13 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Redirect everything to index.html
+  # Pastikan base rewrite
   RewriteBase /
-  RewriteRule ^index\.html$ - [L]
+
+  # Pengecualian untuk corsanywhere.php
+  RewriteRule ^corsanywhere\.php$ - [L]
+
+  # Redirect semua ke index.html
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]

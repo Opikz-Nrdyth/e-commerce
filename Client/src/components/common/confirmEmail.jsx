@@ -58,7 +58,7 @@ const ConfirmEmail = () => {
           });
         }
       } else {
-        if (!user.username && !user.phone_number) {
+        if (!user?.username && !user?.phone_number) {
           setErrorMessage({
             status: "error",
             message:
@@ -70,7 +70,7 @@ const ConfirmEmail = () => {
             status: "error",
             message: "Harap isi semua bidang",
           });
-        } else if (user.username == confirm || user.phone_number == confirm) {
+        } else if (user?.username == confirm || user?.phone_number == confirm) {
           setErrorMessage({
             status: "success",
             message: "",

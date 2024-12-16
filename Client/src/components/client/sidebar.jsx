@@ -78,7 +78,7 @@ const Sidebar = ({ setViewFilter, categories }) => {
             >
               <img
                 src={`${import.meta.env.VITE_BASE_URL}${
-                  category?.thumbnail.url
+                  category?.thumbnail?.url
                 }`}
                 alt={category?.name}
                 width="40px"
