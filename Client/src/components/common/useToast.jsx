@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Toast from "./toast";
+import Toast from "./Toast";
 
 export const useToast = () => {
   const [toast, setToast] = useState(null);
